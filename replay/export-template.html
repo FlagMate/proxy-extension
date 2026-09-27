@@ -1,0 +1,1224 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Session Replay</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        background: linear-gradient(
+          135deg,
+          #0f0f1a 0%,
+          #1a1a2e 50%,
+          #16213e 100%
+        );
+        color: #e0e0e0;
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        min-height: 100vh;
+        padding: 0;
+      }
+
+      .top-bar {
+        background: rgba(0, 0, 0, 0.4);
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid rgba(0, 212, 170, 0.2);
+        padding: 12px 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+      }
+
+      .top-bar .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .top-bar .brand .logo {
+        width: 32px;
+        height: 32px;
+        background: linear-gradient(135deg, #00d4aa, #00a885);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 14px;
+        color: #000;
+      }
+
+      .top-bar .brand h1 {
+        font-size: 15px;
+        font-weight: 600;
+        color: #fff;
+      }
+
+      .top-bar .meta-pills {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .pill {
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        padding: 4px 12px;
+        font-size: 11px;
+        color: #a0a0b0;
+        white-space: nowrap;
+      }
+
+      .pill strong {
+        color: #00d4aa;
+      }
+
+      .main-content {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 24px;
+      }
+
+      .player-section {
+        background: #13131a;
+        border: 1px solid #2d2d3d;
+        border-radius: 12px;
+        overflow: hidden;
+        margin-bottom: 20px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      }
+
+      .player-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 16px;
+        background: rgba(0, 0, 0, 0.3);
+        border-bottom: 1px solid #2d2d3d;
+      }
+
+      .player-header .title {
+        font-size: 13px;
+        font-weight: 600;
+        color: #00d4aa;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .player-header .url {
+        font-size: 11px;
+        color: #6b6b80;
+        max-width: 500px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      #player {
+        min-height: 500px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #0a0a12;
+      }
+
+      .no-player-msg {
+        text-align: center;
+        color: #6b6b80;
+        padding: 40px;
+      }
+
+      .no-player-msg h3 {
+        font-size: 16px;
+        margin-bottom: 8px;
+        color: #a0a0b0;
+      }
+
+      .no-player-msg p {
+        font-size: 12px;
+        max-width: 400px;
+        margin: 0 auto;
+        line-height: 1.6;
+      }
+
+      .panel {
+        background: #1e1e2e;
+        border: 1px solid #2d2d3d;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+        margin-bottom: 16px;
+      }
+
+      .panel-header {
+        padding: 12px 16px;
+        background: rgba(0, 0, 0, 0.3);
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 600;
+        color: #00d4aa;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        border-bottom: 1px solid #2d2d3d;
+        user-select: none;
+        transition: background 0.2s;
+      }
+
+      .panel-header:hover {
+        background: rgba(0, 0, 0, 0.5);
+      }
+
+      .badge {
+        background: rgba(0, 212, 170, 0.15);
+        color: #00d4aa;
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 10px;
+        font-weight: 600;
+      }
+
+      .panel-body {
+        display: none;
+        max-height: 300px;
+        overflow-y: auto;
+      }
+
+      .panel-body.open {
+        display: block;
+        max-height: 300px;
+        overflow-y: auto;
+      }
+
+      /* Chrome-like network toolbar (search + method/type filter chips) */
+      .net-toolbar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        background: rgba(0, 0, 0, 0.25);
+        border-bottom: 1px solid rgba(45, 45, 61, 0.6);
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        flex-wrap: wrap;
+      }
+      .net-search {
+        flex: 1;
+        min-width: 140px;
+        max-width: 280px;
+        padding: 4px 10px;
+        background: #0f0f18;
+        border: 1px solid #2d2d3d;
+        border-radius: 4px;
+        color: #e0e0e0;
+        font-size: 11px;
+        font-family: "SF Mono", "Fira Code", monospace;
+        outline: none;
+      }
+      .net-search:focus {
+        border-color: #00d4aa;
+      }
+      .net-chip {
+        padding: 3px 10px;
+        font-size: 10px;
+        background: transparent;
+        border: 1px solid #2d2d3d;
+        border-radius: 12px;
+        color: #a0a0b0;
+        cursor: pointer;
+        white-space: nowrap;
+        user-select: none;
+        transition: all 0.12s;
+      }
+      .net-chip:hover {
+        color: #e0e0e0;
+        border-color: #3d3d4d;
+      }
+      .net-chip.active {
+        background: rgba(0, 212, 170, 0.15);
+        border-color: #00d4aa;
+        color: #00d4aa;
+      }
+
+      /* Split view: request table (left) + detail drawer (right) */
+      .net-split {
+        display: flex;
+        height: 100%;
+      }
+      /* Wrapper stacks the sticky column header above the scrolling list and
+         owns the flex sizing that used to be on .net-list-col. */
+      .net-list-wrap {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+      .net-list-wrap.with-detail {
+        flex: 0 0 45%;
+        border-right: 1px solid #2d2d3d;
+      }
+      .net-list-col {
+        flex: 1;
+        overflow-y: auto;
+        min-width: 0;
+      }
+      /* Column header row — aligns with .net-entry columns below. */
+      .net-col-header [data-sort] {
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        transition: color 0.12s;
+      }
+      .net-col-header [data-sort]:hover {
+        color: #e0e0e0;
+      }
+      .net-col-header [data-sort].sorted {
+        color: #00d4aa;
+      }
+      .net-col-header .sort-arrow {
+        font-size: 8px;
+        line-height: 1;
+        color: #00d4aa;
+      }
+      .net-col-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 6px 16px;
+        font-size: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        color: #6b6b80;
+        background: rgba(0, 0, 0, 0.25);
+        border-bottom: 1px solid #2d2d3d;
+        flex-shrink: 0;
+        user-select: none;
+      }
+      .net-col-header .seq {
+        min-width: 44px;
+        flex-shrink: 0;
+      }
+      .net-col-header .time {
+        min-width: 72px;
+        flex-shrink: 0;
+      }
+      .net-col-header .method {
+        min-width: 42px;
+        flex-shrink: 0;
+      }
+      .net-col-header .url {
+        flex: 1;
+        min-width: 0;
+      }
+      .net-col-header .status {
+        min-width: 34px;
+        text-align: center;
+        flex-shrink: 0;
+      }
+      .net-col-header .duration {
+        min-width: 58px;
+        text-align: right;
+        flex-shrink: 0;
+      }
+      .net-detail-col {
+        flex: 1;
+        overflow-y: auto;
+        display: none;
+        background: #13131a;
+      }
+      .net-detail-col.open {
+        display: block;
+      }
+
+      .net-entry {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 6px 16px;
+        border-bottom: 1px solid rgba(45, 45, 61, 0.4);
+        border-left: 3px solid transparent;
+        font-size: 11px;
+        font-family: "SF Mono", "Fira Code", monospace;
+        transition: background 0.15s;
+        cursor: pointer;
+      }
+      .net-entry:hover {
+        background: rgba(255, 255, 255, 0.04);
+      }
+      .net-entry.selected {
+        background: rgba(0, 212, 170, 0.1);
+        border-left-color: #00d4aa;
+      }
+      .net-entry.is-error {
+        border-left-color: #ff5252;
+      }
+      .net-entry .seq {
+        min-width: 44px;
+        flex-shrink: 0;
+        color: #00d4aa;
+        opacity: 0.75;
+        font-variant-numeric: tabular-nums;
+      }
+      .net-entry .method {
+        color: #00d4aa;
+        font-weight: 600;
+        min-width: 42px;
+        flex-shrink: 0;
+      }
+      .net-entry .url {
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        color: #c0c0d0;
+      }
+      .net-entry .status {
+        min-width: 34px;
+        text-align: center;
+        font-weight: 600;
+        flex-shrink: 0;
+      }
+      .net-entry .status.ok {
+        color: #4caf50;
+      }
+      .net-entry .status.redirect {
+        color: #ffc107;
+      }
+      .net-entry .status.error {
+        color: #ff5252;
+      }
+      .net-entry .duration {
+        min-width: 58px;
+        text-align: right;
+        color: #6b6b80;
+        flex-shrink: 0;
+      }
+      .net-entry .time {
+        min-width: 72px;
+        color: #6b6b80;
+        flex-shrink: 0;
+      }
+
+      /* Detail drawer */
+      .net-detail-tabs {
+        display: flex;
+        gap: 0;
+        border-bottom: 1px solid #2d2d3d;
+        position: sticky;
+        top: 0;
+        background: #13131a;
+        z-index: 1;
+      }
+      .net-detail-tab {
+        padding: 8px 14px;
+        font-size: 11px;
+        color: #a0a0b0;
+        cursor: pointer;
+        border-bottom: 2px solid transparent;
+      }
+      .net-detail-tab:hover {
+        color: #e0e0e0;
+      }
+      .net-detail-tab.active {
+        color: #00d4aa;
+        border-bottom-color: #00d4aa;
+      }
+      .net-detail-close {
+        margin-left: auto;
+        padding: 8px 14px;
+        color: #ff5252;
+        cursor: pointer;
+      }
+      .net-detail-body {
+        padding: 12px 16px;
+        font-size: 11px;
+      }
+      .net-detail-body h4 {
+        color: #00d4aa;
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin: 12px 0 6px;
+      }
+      .net-detail-body h4:first-child {
+        margin-top: 0;
+      }
+      .net-kv {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      .net-kv td {
+        padding: 3px 8px;
+        border-bottom: 1px solid rgba(45, 45, 61, 0.5);
+        vertical-align: top;
+        word-break: break-all;
+      }
+      .net-kv td:first-child {
+        color: #6496ff;
+        white-space: nowrap;
+        width: 200px;
+      }
+      .net-detail-body pre {
+        margin: 0;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        word-break: normal;
+        line-height: 1.6;
+        color: #c9d1d9;
+        background: #0f0f18;
+        padding: 10px;
+        border-radius: 4px;
+        max-height: 340px;
+        overflow: auto;
+        font-family: "SF Mono", "Menlo", "Fira Code", monospace;
+        font-size: 11px;
+        tab-size: 2;
+      }
+      /* JSON syntax highlight tokens (Chrome DevTools dark palette) */
+      .net-json-key {
+        color: #79c0ff;
+      }
+      .net-json-str {
+        color: #a5d6ff;
+      }
+      .net-json-num {
+        color: #f2cc60;
+      }
+      .net-json-bool {
+        color: #ff7b72;
+      }
+      .net-json-null {
+        color: #ff7b72;
+      }
+      .net-json-punct {
+        color: #8b949e;
+      }
+      .net-detail-empty {
+        color: #6b6b80;
+        padding: 12px 0;
+      }
+
+      /* Thin Chrome-on-Mac scrollbars for scrollable panels */
+      .panel-body::-webkit-scrollbar,
+      .net-list-col::-webkit-scrollbar,
+      .net-detail-col::-webkit-scrollbar,
+      .net-detail-body pre::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+      }
+      .panel-body::-webkit-scrollbar-thumb,
+      .net-list-col::-webkit-scrollbar-thumb,
+      .net-detail-col::-webkit-scrollbar-thumb,
+      .net-detail-body pre::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.16);
+        border-radius: 6px;
+        border: 2px solid transparent;
+        background-clip: padding-box;
+      }
+      .panel-body::-webkit-scrollbar-thumb:hover,
+      .net-list-col::-webkit-scrollbar-thumb:hover,
+      .net-detail-col::-webkit-scrollbar-thumb:hover,
+      .net-detail-body pre::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.32);
+        background-clip: padding-box;
+      }
+      .panel-body::-webkit-scrollbar-track,
+      .net-list-col::-webkit-scrollbar-track,
+      .net-detail-col::-webkit-scrollbar-track,
+      .net-detail-body pre::-webkit-scrollbar-track {
+        background: transparent;
+      }
+
+      /* Chrome-like console toolbar */
+      .console-toolbar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        background: rgba(0, 0, 0, 0.25);
+        border-bottom: 1px solid rgba(45, 45, 61, 0.6);
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        flex-wrap: wrap;
+      }
+
+      .console-search {
+        flex: 1;
+        min-width: 140px;
+        max-width: 280px;
+        padding: 4px 10px;
+        background: #0f0f18;
+        border: 1px solid #2d2d3d;
+        border-radius: 4px;
+        color: #e0e0e0;
+        font-size: 11px;
+        font-family: "SF Mono", "Fira Code", monospace;
+        outline: none;
+      }
+
+      .console-search:focus {
+        border-color: #00d4aa;
+      }
+
+      .console-chip {
+        padding: 3px 10px;
+        font-size: 10px;
+        background: transparent;
+        border: 1px solid #2d2d3d;
+        border-radius: 12px;
+        color: #a0a0b0;
+        cursor: pointer;
+        white-space: nowrap;
+        user-select: none;
+        transition: all 0.12s;
+      }
+
+      .console-chip:hover {
+        color: #e0e0e0;
+        border-color: #3d3d4d;
+      }
+
+      .console-chip.active {
+        background: rgba(0, 212, 170, 0.15);
+        border-color: #00d4aa;
+        color: #00d4aa;
+      }
+
+      .console-chip .cnt {
+        opacity: 0.7;
+        margin-left: 4px;
+      }
+
+      .console-entry {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 5px 16px 5px 12px;
+        border-bottom: 1px solid rgba(45, 45, 61, 0.4);
+        border-left: 3px solid transparent;
+        font-size: 11px;
+        font-family: "SF Mono", "Fira Code", monospace;
+        transition: background 0.15s;
+      }
+
+      .console-entry:hover {
+        background: rgba(255, 255, 255, 0.03);
+      }
+
+      /* Level accents, mirroring Chrome's console rows */
+      .console-entry.level-error {
+        background: rgba(255, 82, 82, 0.08);
+        border-left-color: #ff5252;
+      }
+
+      .console-entry.level-warn {
+        background: rgba(255, 193, 7, 0.07);
+        border-left-color: #ffc107;
+      }
+
+      .console-entry.level-info {
+        border-left-color: #6496ff;
+      }
+
+      .console-entry.level-debug {
+        border-left-color: #6b6b80;
+      }
+
+      .console-time {
+        min-width: 72px;
+        color: #6b6b80;
+        flex-shrink: 0;
+      }
+
+      .console-level {
+        min-width: 42px;
+        font-weight: 700;
+        font-size: 10px;
+        flex-shrink: 0;
+      }
+
+      .console-msg {
+        color: #c0c0d0;
+        word-break: break-word;
+        white-space: pre-wrap;
+        line-height: 1.5;
+        flex: 1;
+      }
+
+      .console-empty-filter {
+        padding: 16px;
+        text-align: center;
+        color: #6b6b80;
+        font-size: 11px;
+      }
+
+      .empty-msg {
+        padding: 20px;
+        text-align: center;
+        color: #6b6b80;
+        font-size: 12px;
+      }
+
+      .footer {
+        margin-top: 24px;
+        padding: 16px;
+        text-align: center;
+        font-size: 11px;
+        color: #4a4a5a;
+        border-top: 1px solid rgba(45, 45, 61, 0.3);
+      }
+
+      .footer a {
+        color: #00d4aa;
+        text-decoration: none;
+      }
+    </style>
+    %%RRWEB_PLAYER_CSS%%
+  </head>
+
+  <body>
+    <div class="top-bar">
+      <div class="brand">
+        <div class="logo">SD</div>
+        <h1>Session Replay</h1>
+      </div>
+      <div class="meta-pills">
+        <span class="pill"><strong>Duration:</strong> %%DURATION%%s</span>
+        <span class="pill"><strong>Events:</strong> %%EVENT_COUNT%%</span>
+        <span class="pill"
+          ><strong>Exported:</strong> %%EXPORT_TIMESTAMP%%</span
+        >
+      </div>
+    </div>
+    <div class="main-content">
+      <div class="player-section">
+        <div class="player-header">
+          <span class="title">▶ Replay</span>
+          <span class="url" title="%%PAGE_URL%%">%%PAGE_URL%%</span>
+        </div>
+        <div id="player">
+          <div class="no-player-msg">
+            <h3>⏳ Loading Player...</h3>
+            <p>
+              If the player doesn't load, the rrweb-player library may not be
+              available.
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <div
+          class="panel-header"
+          onclick="this.nextElementSibling.classList.toggle('open')"
+        >
+          <span>📡 Network Log</span>
+          <span class="badge">%%NETWORK_COUNT%% requests</span>
+        </div>
+        <div class="panel-body" id="net-body" style="max-height: 460px">
+          <div class="net-toolbar">
+            <input
+              type="text"
+              class="net-search"
+              id="net-search"
+              placeholder="Filter by URL…"
+              autocomplete="off"
+            />
+            <span class="net-chip active" data-filter="all">All</span>
+            <span class="net-chip" data-filter="XHR">Fetch/XHR</span>
+            <span class="net-chip" data-filter="Doc">Doc</span>
+            <span class="net-chip" data-filter="JS">JS</span>
+            <span class="net-chip" data-filter="CSS">CSS</span>
+            <span class="net-chip" data-filter="Img">Img</span>
+            <span class="net-chip" data-filter="err">Errors</span>
+          </div>
+          <div class="net-split">
+            <div class="net-list-wrap">
+              <div class="net-col-header">
+                <span
+                  class="seq"
+                  data-sort="seq"
+                  title="Sort by capture order (the sequence in which requests were recorded)"
+                  >#<span class="sort-arrow"></span
+                ></span>
+                <span class="time" data-sort="time" title="Sort by start time"
+                  >Time<span class="sort-arrow"></span
+                ></span>
+                <span class="method" data-sort="method" title="Sort by method"
+                  >Method<span class="sort-arrow"></span
+                ></span>
+                <span class="url" data-sort="url" title="Sort by name"
+                  >Name<span class="sort-arrow"></span
+                ></span>
+                <span class="status" data-sort="status" title="Sort by status"
+                  >Status<span class="sort-arrow"></span
+                ></span>
+                <span
+                  class="duration"
+                  data-sort="duration"
+                  title="Sort by duration"
+                  >Duration<span class="sort-arrow"></span
+                ></span>
+              </div>
+              <div class="net-list-col" id="net-list-col"></div>
+            </div>
+            <div class="net-detail-col" id="net-detail-col"></div>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <div
+          class="panel-header"
+          onclick="this.nextElementSibling.classList.toggle('open')"
+        >
+          <span>🖥️ Console Log</span>
+          <span class="badge">%%CONSOLE_COUNT%% entries</span>
+        </div>
+        <div class="panel-body" id="console-body">
+          <div class="console-toolbar">
+            <input
+              type="text"
+              class="console-search"
+              id="console-search"
+              placeholder="Filter console…"
+              autocomplete="off"
+            />
+            <span class="console-chip active" data-level="all"
+              >All <span class="cnt">%%CONSOLE_COUNT%%</span></span
+            >
+            <span class="console-chip" data-level="error"
+              >Errors <span class="cnt">%%CONSOLE_ERR_COUNT%%</span></span
+            >
+            <span class="console-chip" data-level="warn"
+              >Warnings <span class="cnt">%%CONSOLE_WARN_COUNT%%</span></span
+            >
+            <span class="console-chip" data-level="info"
+              >Info <span class="cnt">%%CONSOLE_INFO_COUNT%%</span></span
+            >
+            <span class="console-chip" data-level="log"
+              >Logs <span class="cnt">%%CONSOLE_LOG_COUNT%%</span></span
+            >
+            <span class="console-chip" data-level="debug"
+              >Verbose <span class="cnt">%%CONSOLE_DEBUG_COUNT%%</span></span
+            >
+          </div>
+          <div id="console-list">%%CONSOLE_ENTRIES%%</div>
+          <div
+            class="console-empty-filter"
+            id="console-empty"
+            style="display: none"
+          >
+            No console entries match the current filter.
+          </div>
+        </div>
+      </div>
+      <div class="footer">
+        Super Debug Extension v%%VERSION%% — Generated by SDM Ultra Pro Max+
+      </div>
+    </div>
+    <script>
+      var __events =%%EVENTS_JSON%%;
+      function initPlayer() {
+          try {
+              if (typeof rrwebPlayer !== 'undefined' && __events.length > 0) { document.getElementById('player').innerHTML = ''; new rrwebPlayer({ target: document.getElementById('player'), props: { events: __events, showController: true, autoPlay: false } }); }
+              else { document.getElementById('player').innerHTML = '<div class="no-player-msg"><h3>Player Unavailable</h3><p>Could not load rrweb-player.</p></div>'; }
+          } catch (e) { document.getElementById('player').innerHTML = '<div class="no-player-msg"><h3>Error</h3><p>' + e.message + '</p></div>'; }
+      }
+    </script>
+    <script>
+      // Console panel: Chrome-like level + text filtering (self-contained).
+      (function () {
+        var search = document.getElementById("console-search");
+        var chips = Array.prototype.slice.call(
+          document.querySelectorAll(".console-chip"),
+        );
+        var list = document.getElementById("console-list");
+        var empty = document.getElementById("console-empty");
+        if (!list) return;
+        var rows = Array.prototype.slice.call(
+          list.querySelectorAll(".console-entry"),
+        );
+        var activeLevel = "all";
+        var query = "";
+
+        function apply() {
+          var visible = 0;
+          for (var i = 0; i < rows.length; i++) {
+            var row = rows[i];
+            var lvl = row.getAttribute("data-level") || "log";
+            var levelOk = activeLevel === "all" || lvl === activeLevel;
+            var textOk =
+              !query || row.textContent.toLowerCase().indexOf(query) !== -1;
+            var show = levelOk && textOk;
+            row.style.display = show ? "" : "none";
+            if (show) visible++;
+          }
+          if (empty) empty.style.display = visible === 0 ? "block" : "none";
+        }
+
+        chips.forEach(function (chip) {
+          chip.addEventListener("click", function () {
+            chips.forEach(function (c) {
+              c.classList.remove("active");
+            });
+            chip.classList.add("active");
+            activeLevel = chip.getAttribute("data-level");
+            apply();
+          });
+        });
+
+        if (search) {
+          search.addEventListener("input", function () {
+            query = search.value.trim().toLowerCase();
+            apply();
+          });
+        }
+      })();
+    </script>
+    <script>
+      // Network panel: Chrome-like clickable rows + detail drawer + filtering.
+      (function () {
+        var requests = %%NETWORK_JSON%%;
+        var listCol = document.getElementById("net-list-col");
+        var detailCol = document.getElementById("net-detail-col");
+        var search = document.getElementById("net-search");
+        var chips = Array.prototype.slice.call(document.querySelectorAll(".net-chip"));
+        if (!listCol) return;
+
+        var activeFilter = "all";
+        var query = "";
+        var selectedIdx = -1;
+
+        function esc(s) {
+          return String(s == null ? "" : s)
+            .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        }
+        // Color-code a pretty-printed JSON string (Chrome DevTools style).
+        // Strings (incl. braces/colons inside them) stay one token; keys, numbers,
+        // booleans, null, and structural punctuation each get their own class.
+        function highlightJson(pretty) {
+          var tokenRe = /("(?:\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(?:true|false|null)\b|-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|[{}\[\],:])/g;
+          return esc(pretty).replace(tokenRe, function (m) {
+            if (m[0] === '"') {
+              if (/:\s*$/.test(m)) {
+                return '<span class="net-json-key">' + m.replace(/\s*:$/, "") + '</span><span class="net-json-punct">:</span>';
+              }
+              return '<span class="net-json-str">' + m + '</span>';
+            }
+            if (m === "true" || m === "false") return '<span class="net-json-bool">' + m + '</span>';
+            if (m === "null") return '<span class="net-json-null">' + m + '</span>';
+            if (/^[{}\[\],:]$/.test(m)) return '<span class="net-json-punct">' + m + '</span>';
+            return '<span class="net-json-num">' + m + '</span>';
+          });
+        }
+        function typeOf(url) {
+          try {
+            var p = new URL(url, location.href).pathname.toLowerCase();
+            if (/\.js($|\?)/.test(p)) return "JS";
+            if (/\.css($|\?)/.test(p)) return "CSS";
+            if (/\.(png|jpg|jpeg|gif|webp|svg|ico|avif)($|\?)/.test(p)) return "Img";
+            if (/\.(woff2?|ttf|otf|eot)($|\?)/.test(p)) return "Font";
+            if (/\.(mp4|webm|m3u8|mpd|ts)($|\?)/.test(p)) return "Media";
+            if (/\.html?($|\?)/.test(p)) return "Doc";
+          } catch (e) {}
+          return "XHR";
+        }
+        function shortName(url) {
+          try {
+            var u = new URL(url, location.href);
+            var n = u.pathname.split("/").filter(Boolean).pop() || u.hostname;
+            return n + (u.search || "");
+          } catch (e) { return url; }
+        }
+        function statusCls(r) {
+          if (!r.statusCode || r.error) return "error";
+          if (r.statusCode >= 400) return "error";
+          if (r.statusCode >= 300) return "redirect";
+          return "ok";
+        }
+        function fmtTime(ms) {
+          if (ms == null) return "—";
+          return ms < 1000 ? Math.round(ms) + " ms" : (ms / 1000).toFixed(2) + " s";
+        }
+        function fmtTS(ts) {
+          // Zero-padded 24-hour clock WITH milliseconds, e.g. "02:21:13.817" —
+          // locale-independent, and the millisecond makes same-second ordering
+          // visible and unambiguous across machines.
+          try {
+            var d = new Date(ts);
+            var p = function (n) { return (n < 10 ? "0" : "") + n; };
+            var p3 = function (n) { return (n < 10 ? "00" : n < 100 ? "0" : "") + n; };
+            return p(d.getHours()) + ":" + p(d.getMinutes()) + ":" + p(d.getSeconds()) + "." + p3(d.getMilliseconds());
+          } catch (e) { return ""; }
+        }
+
+        function matches(r) {
+          var textOk = !query || (r.url || "").toLowerCase().indexOf(query) !== -1;
+          var t = typeOf(r.url);
+          var filterOk =
+            activeFilter === "all" ||
+            (activeFilter === "err" && (!r.statusCode || r.error || r.statusCode >= 400)) ||
+            activeFilter === t;
+          return textOk && filterOk;
+        }
+
+        // Capture-order sequence (#1, #2, …) assigned from the ORIGINAL array
+        // order, which is the exact order the interceptor recorded each request.
+        // This is the authoritative order and never changes, regardless of how
+        // the list is later sorted or filtered — so the "#N" column always tells
+        // the true order in which requests fired.
+        // Fully deterministic ordering key. Primary sort is the request START
+        // timestamp (the order requests actually fired). For the rare case where
+        // several requests share the exact same millisecond, we break the tie on
+        // stable, intrinsic fields — method, then URL, then the original array
+        // index — so the ordering is byte-for-byte reproducible on every machine
+        // and never relies on JS engine sort stability. This guarantees the "#N"
+        // capture sequence and the visible row order can never disagree or drift.
+        function orderKeyCmp(a, b) {
+          var ra = requests[a], rb = requests[b];
+          var dt = (ra.timestamp || 0) - (rb.timestamp || 0);
+          if (dt !== 0) return dt;
+          var ma = (ra.method || "GET"), mb = (rb.method || "GET");
+          if (ma !== mb) return ma < mb ? -1 : 1;
+          var ua = (ra.url || ""), ub = (rb.url || "");
+          if (ua !== ub) return ua < ub ? -1 : 1;
+          return a - b;
+        }
+        var captureSeq = {};
+        (function () {
+          // Number the OLDEST request #1 and the newest #N (natural reading
+          // order), using the deterministic ordering key above.
+          var byTime = requests.map(function (r, i) { return i; }).sort(orderKeyCmp);
+          for (var s = 0; s < byTime.length; s++) {
+            captureSeq[byTime[s]] = s + 1;
+          }
+        })();
+        var totalCaptured = requests.length;
+        var seqWidth = String(totalCaptured).length;
+        function padSeq(n) {
+          var s = String(n);
+          while (s.length < seqWidth) s = "0" + s;
+          return s;
+        }
+
+        // ---- Column sorting (Chrome-like) --------------------------------
+        // Default view is capture order (sortKey "seq", ascending). Clicking a
+        // header sorts by that column; clicking the same header again reverses
+        // direction. Ties always fall back to the deterministic capture order so
+        // the sort is stable and reproducible — two rows can never swap places
+        // unpredictably.
+        var sortKey = "seq";   // seq | time | method | url | status | duration
+        var sortDir = 1;       // 1 = ascending, -1 = descending
+
+        function sortValue(i, key) {
+          var r = requests[i];
+          switch (key) {
+            case "time": return r.timestamp || 0;
+            case "method": return (r.method || "GET");
+            case "url": return shortName(r.url || "").toLowerCase();
+            case "status": return (r.statusCode || 0);
+            case "duration": return (r.duration == null ? -1 : r.duration);
+            case "seq":
+            default: return captureSeq[i];
+          }
+        }
+
+        function sortCmp(a, b) {
+          var va = sortValue(a, sortKey), vb = sortValue(b, sortKey);
+          var d;
+          if (typeof va === "number" && typeof vb === "number") d = va - vb;
+          else d = va < vb ? -1 : va > vb ? 1 : 0;
+          if (d !== 0) return d * sortDir;
+          // Stable, deterministic tiebreak: always fall back to capture order.
+          return captureSeq[a] - captureSeq[b];
+        }
+
+        function updateHeaderIndicators() {
+          var hdr = document.querySelector(".net-col-header");
+          if (!hdr) return;
+          Array.prototype.slice.call(hdr.querySelectorAll("[data-sort]")).forEach(function (el) {
+            var key = el.getAttribute("data-sort");
+            el.classList.toggle("sorted", key === sortKey);
+            var arrow = el.querySelector(".sort-arrow");
+            if (arrow) arrow.textContent = key === sortKey ? (sortDir === 1 ? "▲" : "▼") : "";
+          });
+        }
+
+        function renderList() {
+          var html = "";
+          // Rows are ordered by the active sort column (default: capture order,
+          // #1 first). data-idx keeps the ORIGINAL index so selection/detail map
+          // correctly regardless of sort. The "#N" capture sequence is fixed and
+          // shown on every row, so even when sorted by another column the true
+          // fire order is always readable.
+          var order = requests.map(function (r, i) { return i; }).sort(sortCmp);
+          for (var k = 0; k < order.length; k++) {
+            var i = order[k];
+            var r = requests[i];
+            if (!matches(r)) continue;
+            var cls = "net-entry" + (i === selectedIdx ? " selected" : "") +
+              (!r.statusCode || r.error || r.statusCode >= 400 ? " is-error" : "");
+            html +=
+              '<div class="' + cls + '" data-idx="' + i + '">' +
+              '<span class="seq" title="Capture order (1 = first request recorded)">#' + padSeq(captureSeq[i]) + '</span>' +
+              '<span class="time">' + fmtTS(r.timestamp) + '</span>' +
+              '<span class="method">' + esc(r.method || "GET") + '</span>' +
+              '<span class="url" title="' + esc(r.url) + '">' + esc(shortName(r.url)) + '</span>' +
+              '<span class="status ' + statusCls(r) + '">' + (r.statusCode || "✕") + '</span>' +
+              '<span class="duration">' + fmtTime(r.duration) + '</span>' +
+              "</div>";
+          }
+          listCol.innerHTML = html || '<div class="net-detail-empty" style="padding:16px;">No requests match the filter.</div>';
+          Array.prototype.slice.call(listCol.querySelectorAll(".net-entry")).forEach(function (el) {
+            el.addEventListener("click", function () {
+              selectedIdx = parseInt(el.getAttribute("data-idx"), 10);
+              renderList();
+              openDetail(requests[selectedIdx]);
+            });
+          });
+          updateHeaderIndicators();
+        }
+
+        // Wire clickable, sortable column headers (Chrome-like). Clicking a
+        // header sorts by that column ascending; clicking the active header
+        // again toggles descending.
+        (function wireSortableHeaders() {
+          var hdr = document.querySelector(".net-col-header");
+          if (!hdr) return;
+          Array.prototype.slice.call(hdr.querySelectorAll("[data-sort]")).forEach(function (el) {
+            el.addEventListener("click", function () {
+              var key = el.getAttribute("data-sort");
+              if (key === sortKey) {
+                sortDir = -sortDir; // toggle direction on repeat click
+              } else {
+                sortKey = key;
+                sortDir = 1;        // new column starts ascending
+              }
+              renderList();
+            });
+          });
+        })();
+
+        function kvTable(obj) {
+          if (!obj || !Object.keys(obj).length) return '<div class="net-detail-empty">None</div>';
+          var rows = Object.keys(obj).map(function (k) {
+            return "<tr><td>" + esc(k) + "</td><td>" + esc(obj[k]) + "</td></tr>";
+          }).join("");
+          return '<table class="net-kv">' + rows + "</table>";
+        }
+        function bodyBlock(text) {
+          if (text == null || text === "") return '<div class="net-detail-empty">No body captured</div>';
+          // Pretty-print + color-code JSON; fall back to plain escaped text.
+          try {
+            var pretty = JSON.stringify(JSON.parse(text), null, 2);
+            return "<pre>" + highlightJson(pretty) + "</pre>";
+          } catch (e) {
+            return "<pre>" + esc(text) + "</pre>";
+          }
+        }
+        function queryParams(url) {
+          try {
+            var entries = Array.from(new URL(url, location.href).searchParams.entries());
+            if (!entries.length) return "";
+            return "<h4>Query String Parameters</h4><table class=\"net-kv\">" +
+              entries.map(function (e) { return "<tr><td>" + esc(e[0]) + "</td><td>" + esc(e[1]) + "</td></tr>"; }).join("") +
+              "</table>";
+          } catch (e) { return ""; }
+        }
+
+        function detailTab(r, tab) {
+          if (tab === "headers") {
+            var idx = requests.indexOf(r);
+            return "<h4>General</h4><table class=\"net-kv\">" +
+              "<tr><td>Request URL</td><td>" + esc(r.url) + "</td></tr>" +
+              "<tr><td>Method</td><td>" + esc(r.method || "GET") + "</td></tr>" +
+              "<tr><td>Status</td><td>" + (r.statusCode || "(failed)") + " " + esc(r.statusText || "") + "</td></tr>" +
+              "<tr><td>Started</td><td>" + fmtTS(r.timestamp) + " (" + esc(String(r.timestamp)) + " ms epoch)</td></tr>" +
+              "<tr><td>Duration</td><td>" + fmtTime(r.duration) + "</td></tr>" +
+              (idx >= 0 && captureSeq[idx] ? "<tr><td>Capture order</td><td>#" + padSeq(captureSeq[idx]) + " of " + totalCaptured + "</td></tr>" : "") +
+              (r.error ? "<tr><td>Error</td><td>" + esc(r.error) + "</td></tr>" : "") +
+              "</table>" +
+              "<h4>Response Headers</h4>" + kvTable(r.responseHeaders) +
+              "<h4>Request Headers</h4>" + kvTable(r.requestHeaders);
+          }
+          if (tab === "payload") {
+            var q = queryParams(r.url);
+            var body = r.requestBody ? "<h4>Request Payload</h4>" + bodyBlock(r.requestBody) : "";
+            return (q + body) || '<div class="net-detail-empty">No payload for this request.</div>';
+          }
+          if (tab === "response") {
+            return bodyBlock(r.responseBody);
+          }
+          return "";
+        }
+
+        function openDetail(r) {
+          detailCol.classList.add("open");
+          listCol.classList.add("with-detail");
+          var current = "headers";
+          function paint() {
+            detailCol.innerHTML =
+              '<div class="net-detail-tabs">' +
+              '<span class="net-detail-tab" data-tab="headers">Headers</span>' +
+              '<span class="net-detail-tab" data-tab="payload">Payload</span>' +
+              '<span class="net-detail-tab" data-tab="response">Response</span>' +
+              '<span class="net-detail-close">✕</span>' +
+              "</div>" +
+              '<div class="net-detail-body" id="net-detail-body"></div>';
+            var tabs = detailCol.querySelectorAll(".net-detail-tab");
+            Array.prototype.slice.call(tabs).forEach(function (t) {
+              if (t.getAttribute("data-tab") === current) t.classList.add("active");
+              t.addEventListener("click", function () {
+                current = t.getAttribute("data-tab");
+                paint();
+              });
+            });
+            detailCol.querySelector(".net-detail-close").addEventListener("click", closeDetail);
+            document.getElementById("net-detail-body").innerHTML = detailTab(r, current);
+          }
+          paint();
+        }
+        function closeDetail() {
+          detailCol.classList.remove("open");
+          listCol.classList.remove("with-detail");
+          selectedIdx = -1;
+          renderList();
+        }
+
+        chips.forEach(function (chip) {
+          chip.addEventListener("click", function () {
+            chips.forEach(function (c) { c.classList.remove("active"); });
+            chip.classList.add("active");
+            activeFilter = chip.getAttribute("data-filter");
+            renderList();
+          });
+        });
+        if (search) {
+          search.addEventListener("input", function () {
+            query = search.value.trim().toLowerCase();
+            renderList();
+          });
+        }
+        renderList();
+      })();
+    </script>
+    <script>
+      %%RRWEB_PLAYER_JS%%
+    </script>
+  </body>
+</html>

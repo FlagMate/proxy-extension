@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Super Debug Mode Ultra Pro Max Plus</title>
+    <link rel="stylesheet" href="../styles/theme.css" />
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+
+  <body>
+    <div class="popup-container">
+      <!-- Header -->
+      <header class="popup-header">
+        <div class="popup-brand">
+          <span class="popup-logo">⚡</span>
+          <div>
+            <h1 class="popup-title">SDM Ultra Pro Max+</h1>
+            <p class="popup-subtitle">
+              Your APIs called. They want boundaries.
+            </p>
+          </div>
+        </div>
+        <span class="popup-version" id="popup-version"></span>
+      </header>
+
+      <!-- Philosophy -->
+      <div class="popup-philosophy">
+        <p>Intercept anything. Modify everything. Break nothing.*</p>
+        <p class="popup-disclaimer">
+          *Breaking things is also an option. We don't judge.
+        </p>
+      </div>
+
+      <!-- Master Switch -->
+      <div class="popup-section">
+        <div class="popup-switch-row master">
+          <div class="popup-switch-info">
+            <span class="popup-switch-label">Master Kill Switch</span>
+            <span class="popup-switch-desc"
+              >One switch to rule them all. Disable everything instantly.</span
+            >
+          </div>
+          <span class="toggle-switch">
+            <input type="checkbox" id="popup-master" checked />
+            <span class="slider"></span>
+          </span>
+        </div>
+      </div>
+
+      <div class="popup-divider"></div>
+
+      <!-- Feature Switches -->
+      <div class="popup-section">
+        <div class="popup-switch-row">
+          <div class="popup-switch-info">
+            <span class="popup-switch-label">🧩 Snippets</span>
+            <span class="popup-switch-desc"
+              >JS/CSS injection into any page</span
+            >
+          </div>
+          <span class="toggle-switch">
+            <input type="checkbox" id="popup-snippets" checked />
+            <span class="slider"></span>
+          </span>
+        </div>
+
+        <div class="popup-switch-row">
+          <div class="popup-switch-info">
+            <span class="popup-switch-label">⇌ Proxy</span>
+            <span class="popup-switch-desc"
+              >HTTP interception, URL rewrite, payload merge</span
+            >
+          </div>
+          <span class="toggle-switch">
+            <input type="checkbox" id="popup-proxy" checked />
+            <span class="slider"></span>
+          </span>
+        </div>
+      </div>
+
+      <div class="popup-divider"></div>
+
+      <!-- Session Replay -->
+      <div class="popup-section">
+        <div class="popup-switch-row">
+          <div class="popup-switch-info">
+            <span class="popup-switch-label">📹 Session Replay</span>
+            <span class="popup-switch-desc" id="popup-replay-status"
+              >Checking...</span
+            >
+          </div>
+          <button
+            class="btn btn--sm"
+            id="popup-replay-download"
+            title="Download last 60 seconds of page recording"
+          >
+            Download 60s
+          </button>
+        </div>
+      </div>
+
+      <div class="popup-divider"></div>
+
+      <!-- Status -->
+      <div class="popup-footer">
+        <span class="popup-status" id="popup-status">● Active</span>
+        <span class="popup-hint">Open DevTools → SDM Ultra Pro Max+ tab</span>
+      </div>
+    </div>
+
+    <script src="popup.js"></script>
+  </body>
+</html>

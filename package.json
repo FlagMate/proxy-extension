@@ -1,0 +1,21 @@
+{
+  "name": "super-debug-extension",
+  "version": "2.4",
+  "private": true,
+  "description": "Super Debug Mode Ultra Pro Max Plus — Chrome MV3 developer-debugging extension. Intercept, modify, mock.",
+  "type": "module",
+  "scripts": {
+    "clean": "node scripts/clean.mjs",
+    "build": "node scripts/build.mjs",
+    "package": "node scripts/build.mjs && node scripts/zip.mjs",
+    "rebuild": "npm run clean && npm run build",
+    "test": "node scripts/test-replay-export.mjs && node scripts/test-cdn-merge.mjs && node scripts/test-cdn-sync.mjs",
+    "test:replay": "node scripts/test-replay-export.mjs",
+    "test:cdn": "node scripts/test-cdn-merge.mjs && node scripts/test-cdn-sync.mjs",
+    "commit": "node scripts/commit.js",
+    "deployment": "node scripts/deployment.js"
+  },
+  "devDependencies": {
+    "esbuild": "^0.24.0"
+  }
+}
