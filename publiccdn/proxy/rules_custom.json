@@ -1,0 +1,57 @@
+[
+  {
+    "name": "CDN Custom — Add testCounter to VIDEOURL payload",
+    "enabled": true,
+    "match": {
+      "urlPattern": "*apiv2.sonyliv.com/*/CONTENT/VIDEOURL/*",
+      "matchType": "wildcard",
+      "methods": ["POST"],
+      "resourceTypes": ["xmlhttprequest", "*"]
+    },
+    "request": {
+      "body": {
+        "enabled": true,
+        "action": "merge",
+        "value": "{ \"testCounter\": \"18091235\" }"
+      }
+    }
+  },
+  {
+    "name": "CDN Custom — Set Td_client_hints request header",
+    "enabled": true,
+    "match": {
+      "urlPattern": "*apiv2.sonyliv.com/*",
+      "matchType": "wildcard",
+      "methods": ["*"],
+      "resourceTypes": ["xmlhttprequest", "*"]
+    },
+    "request": {
+      "headers": [
+        {
+          "action": "set",
+          "name": "Td_client_hints",
+          "value": "{\"os_name\":\"Mac OS\",\"os_version\":\"11.15.7\",\"device_make\":\"Apple\",\"device_model\":\"Macintosh\",\"display_res\":\"1920\",\"viewport_res\":\"1920\",\"conn_type\":\"4g\",\"supp_codec\":\"H264,H265,AV1,AAC\",\"client_throughput\":\"16000\",\"td_user_agent\":\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36\",\"hdr_decoder\":\"UNKNOWN\",\"audio_decoder\":\"STEREO\",\"app_version\":\"3.6.82\"}"
+        }
+      ]
+    }
+  },
+  {
+    "name": "CDN Custom — Override User-Agent request header",
+    "enabled": true,
+    "match": {
+      "urlPattern": "*apiv2.sonyliv.com/*",
+      "matchType": "wildcard",
+      "methods": ["*"],
+      "resourceTypes": ["xmlhttprequest", "*"]
+    },
+    "request": {
+      "headers": [
+        {
+          "action": "set",
+          "name": "User-Agent",
+          "value": "Mozilla/5.0 (Macintosh; Intel Mac OS X 11_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36"
+        }
+      ]
+    }
+  }
+]

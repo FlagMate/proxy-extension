@@ -1,0 +1,64 @@
+{
+  "manifest_version": 3,
+  "name": "ProxyCeptor — DevTools & HTTP Interception Suite",
+  "version": "2.4",
+  "description": "When console.log isn't cutting it anymore. Intercept, modify, mock — because your APIs deserve therapy too.",
+  "minimum_chrome_version": "105",
+  "permissions": [
+    "storage",
+    "scripting",
+    "activeTab",
+    "contextMenus",
+    "declarativeNetRequest",
+    "declarativeNetRequestFeedback",
+    "webRequest",
+    "debugger",
+    "downloads",
+    "notifications",
+    "tabCapture"
+  ],
+  "host_permissions": ["<all_urls>"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    }
+  },
+  "devtools_page": "devtools/devtools.html",
+  "icons": {
+    "16": "icons/icon-16.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": [
+        "lib/rrweb/rrweb.min.js",
+        "replay/recorder.js",
+        "replay/network-logger.js",
+        "replay/console-logger.js",
+        "replay/indicator.js",
+        "replay/content-init.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "replay/export-template.html",
+        "replay/page-interceptor.js",
+        "lib/rrweb/rrweb.min.js",
+        "lib/rrweb/rrweb-player.min.js",
+        "lib/rrweb/rrweb-player.min.css"
+      ],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}

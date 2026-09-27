@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Super Debug Panel</title>
+    <link rel="stylesheet" href="../styles/theme.css" />
+    <link rel="stylesheet" href="../lib/codemirror/codemirror.css" />
+    <link rel="stylesheet" href="../lib/rrweb/rrweb-player.min.css" />
+    <link rel="stylesheet" href="panel.css" />
+    <!-- Bundled rrweb player (defines global `rrwebPlayer`) for inline Replay -->
+    <script src="../lib/rrweb/rrweb-player.min.js"></script>
+  </head>
+
+  <body>
+    <div class="panel-shell">
+      <!-- Tab Bar -->
+      <nav class="tab-bar" role="tablist" aria-label="Panel tabs"></nav>
+
+      <!-- Tab Content -->
+      <div class="tab-content">
+        <!-- Snippets Tab -->
+        <div
+          id="tab-snippets"
+          class="tab-pane"
+          role="tabpanel"
+          aria-labelledby="tab-btn-snippets"
+        >
+          <div class="split-pane">
+            <!-- Left Sidebar: Snippet List -->
+            <aside class="snippet-sidebar">
+              <div class="sidebar-header">
+                <h2 class="sidebar-title">Snippets</h2>
+              </div>
+              <div class="snippet-list" id="snippet-list">
+                <!-- Dynamically rendered -->
+              </div>
+              <div class="sidebar-footer">
+                <button class="btn btn--primary btn--full" id="btn-new-snippet">
+                  <span class="btn-icon">+</span> New Snippet
+                </button>
+              </div>
+            </aside>
+
+            <!-- Right Content: Snippet Editor -->
+            <main class="snippet-editor">
+              <div class="editor-empty-state" id="editor-empty-state">
+                <div class="empty-icon">{ }</div>
+                <p class="empty-text">Select a snippet or create a new one</p>
+              </div>
+              <div class="editor-form" id="editor-form" style="display: none">
+                <!-- Name -->
+                <div class="form-group">
+                  <label class="form-label" for="snippet-name">Name</label>
+                  <input
+                    type="text"
+                    id="snippet-name"
+                    class="input"
+                    placeholder="My snippet"
+                    autocomplete="off"
+                  />
+                  <span class="form-error" id="error-name"></span>
+                </div>
+
+                <!-- Type -->
+                <div class="form-group">
+                  <label class="form-label">Type</label>
+                  <div class="radio-group">
+                    <label class="radio-option">
+                      <input
+                        type="radio"
+                        name="snippet-type"
+                        value="js"
+                        checked
+                      />
+                      <span class="radio-label badge">JS</span>
+                    </label>
+                    <label class="radio-option">
+                      <input type="radio" name="snippet-type" value="css" />
+                      <span class="radio-label badge badge--css">CSS</span>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- URL Pattern -->
+                <div class="form-group">
+                  <label class="form-label" for="snippet-pattern"
+                    >URL Pattern</label
+                  >
+                  <input
+                    type="text"
+                    id="snippet-pattern"
+                    class="input font-mono"
+                    placeholder="*"
+                    autocomplete="off"
+                  />
+                  <span class="form-error" id="error-pattern"></span>
+                </div>
+
+                <!-- Code Editor -->
+                <div class="form-group form-group--grow">
+                  <label class="form-label">Code</label>
+                  <div id="editor-container" class="editor-area">
+                    <!-- Custom code editor is initialized here by snippets.js -->
+                  </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="editor-actions">
+                  <div class="actions-left">
+                    <button class="btn btn--primary" id="btn-save">Save</button>
+                    <button class="btn btn--danger" id="btn-delete">
+                      Delete
+                    </button>
+                  </div>
+                  <div class="actions-right">
+                    <label class="toggle-row">
+                      <span class="toggle-label">Enabled</span>
+                      <span class="toggle-switch">
+                        <input type="checkbox" id="snippet-enabled" checked />
+                        <span class="slider"></span>
+                      </span>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Feedback -->
+                <div class="feedback-message" id="feedback-message"></div>
+              </div>
+            </main>
+          </div>
+        </div>
+
+        <!-- Proxy Tab -->
+        <div
+          id="tab-proxy"
+          class="tab-pane"
+          role="tabpanel"
+          aria-labelledby="tab-btn-proxy"
+        >
+          <!-- Content rendered dynamically by proxy.js init() -->
+        </div>
+
+        <!-- Network Tab -->
+        <div
+          id="tab-network"
+          class="tab-pane"
+          role="tabpanel"
+          aria-labelledby="tab-btn-network"
+        >
+          <!-- Content rendered dynamically by network.js init() -->
+        </div>
+
+        <!-- GV1 Tab -->
+        <div
+          id="tab-gv1"
+          class="tab-pane"
+          role="tabpanel"
+          aria-labelledby="tab-btn-gv1"
+        >
+          <!-- Content rendered dynamically by gv1.js init() -->
+        </div>
+
+        <!-- Replay Tab -->
+        <div
+          id="tab-replay"
+          class="tab-pane"
+          role="tabpanel"
+          aria-labelledby="tab-btn-replay"
+        >
+          <!-- Content rendered dynamically by replay.js init() -->
+        </div>
+
+        <!-- Settings Tab -->
+        <div
+          id="tab-settings"
+          class="tab-pane"
+          role="tabpanel"
+          aria-labelledby="tab-btn-settings"
+        >
+          <!-- Content rendered dynamically by settings.js init() -->
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="panel.js"></script>
+  </body>
+</html>

@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>SuperDebug — Payload Merge Test</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0f0f1a;
+            color: #fff;
+            padding: 24px;
+        }
+
+        h1 {
+            color: #00d4aa;
+            margin-bottom: 8px;
+        }
+
+        p.subtitle {
+            color: #6b6b80;
+            font-size: 13px;
+            margin-bottom: 24px;
+        }
+
+        .section {
+            background: #1a1a2e;
+            border: 1px solid #2a2a4a;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .section h2 {
+            font-size: 14px;
+            color: #00d4aa;
+            margin-bottom: 12px;
+        }
+
+        .section p {
+            font-size: 12px;
+            color: #b0b0c0;
+            margin-bottom: 8px;
+        }
+
+        button {
+            padding: 8px 16px;
+            font-size: 12px;
+            font-weight: 600;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-right: 8px;
+            margin-bottom: 8px;
+        }
+
+        .btn-primary {
+            background: #00d4aa;
+            color: #0f0f1a;
+        }
+
+        .btn-secondary {
+            background: #2a2a4a;
+            color: #fff;
+            border: 1px solid #3a3a5a;
+        }
+
+        .log {
+            background: #0a0a14;
+            border: 1px solid #2a2a4a;
+            border-radius: 6px;
+            padding: 12px;
+            margin-top: 12px;
+            font-family: 'SF Mono', monospace;
+            font-size: 11px;
+            color: #b0b0c0;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+
+        .log .success {
+            color: #00d4aa;
+        }
+
+        .log .error {
+            color: #ff5252;
+        }
+
+        .log .info {
+            color: #ffc107;
+        }
+
+        .rule-config {
+            background: #232340;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 12px;
+            font-size: 11px;
+            font-family: monospace;
+            color: #b0b0c0;
+        }
+
+        .rule-config strong {
+            color: #00d4aa;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>⇌ SuperDebug — Payload Merge Test Page</h1>
+    <p class="subtitle">Create a proxy rule matching <code>*/test-merge*</code> (wildcard) with "Add / Modify (JSON
+        Merge)" action, then click the buttons below to test.</p>
+
+    <div class="section">
+        <h2>📋 Setup Instructions</h2>
+        <div class="rule-config">
+            <strong>Rule Config:</strong><br>
+            • URL Pattern: <strong>*/test-merge*</strong> (Wildcard)<br>
+            • HTTP Method: <strong>POST</strong><br>
+            • Resource Type: <strong>XHR/Fetch</strong><br>
+            • Request → Payload Modify → Action: <strong>Add / Modify (JSON Merge)</strong><br>
+            • Delta value: <strong>{"injected": "by-superdebug", "nested": {"modified": true}}</strong>
+        </div>
+        <p>The original payloads below contain keys that should be PRESERVED after merge. If you only see the delta in
+            Network tab, the merge is broken.</p>
+    </div>
+
+    <div class="section">
+        <h2>🧪 Test: fetch() with string body</h2>
+        <p>Original payload: <code>{"user":"alice", "role":"admin", "nested":{"keep":"this","modified":false}}</code>
+        </p>
+        <p>Expected after merge: all original keys + <code>"injected":"by-superdebug"</code> +
+            <code>"nested.modified":true</code> (nested.keep preserved)</p>
+        <button class="btn-primary" onclick="testFetchString()">Send fetch (string body)</button>
+    </div>
+
+    <div class="section">
+        <h2>🧪 Test: fetch() with Blob body</h2>
+        <p>Original payload: <code>{"items":[1,2,3], "count":3, "nested":{"deep":"value"}}</code></p>
+        <p>Expected after merge: all original keys preserved + delta merged in</p>
+        <button class="btn-primary" onclick="testFetchBlob()">Send fetch (Blob body)</button>
+    </div>
+
+    <div class="section">
+        <h2>🧪 Test: fetch() with Request object</h2>
+        <p>Original payload: <code>{"session":"xyz123", "page":"/home", "nested":{"level":"deep"}}</code></p>
+        <p>Expected after merge: all original keys preserved + delta merged in</p>
+        <button class="btn-primary" onclick="testFetchRequest()">Send fetch (Request object)</button>
+    </div>
+
+    <div class="section">
+        <h2>🧪 Test: navigator.sendBeacon() with string body</h2>
+        <p>Original payload: <code>{"event":"click", "ts":1234567890, "nested":{"source":"page"}}</code></p>
+        <p>Expected after merge: all original keys preserved + delta merged in</p>
+        <button class="btn-primary" onclick="testBeaconString()">Send beacon (string)</button>
+    </div>
+
+    <div class="section">
+        <h2>🧪 Test: navigator.sendBeacon() with Blob body</h2>
+        <p>Original payload: <code>{"asp":{"as-uid":"abc123","as-av":"3.6.76","platform":"web"}, "user":"anon"}</code>
+        </p>
+        <p>Expected after merge: asp.as-uid, asp.platform, user preserved + delta merged in</p>
+        <button class="btn-secondary" onclick="testBeaconBlob()">Send beacon (Blob) — THE BUG SCENARIO</button>
+    </div>
+
+    <div class="section">
+        <h2>📊 Results</h2>
+        <button class="btn-secondary" onclick="clearLog()">Clear Log</button>
+        <div class="log" id="log">Waiting for tests...\n</div>
+    </div>
+
+    <script>
+        const TEST_URL = '/test-merge-endpoint';
+
+        function log(msg, type) {
+            const el = document.getElementById('log');
+            const span = document.createElement('span');
+            span.className = type || '';
+            span.textContent = msg + '\n';
+            el.appendChild(span);
+            el.scrollTop = el.scrollHeight;
+        }
+
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+        }
+
+        async function testFetchString() {
+            log('━━━ fetch() with string body ━━━', 'info');
+            const payload = { user: 'alice', role: 'admin', nested: { keep: 'this', modified: false } };
+            log('Original: ' + JSON.stringify(payload));
+            try {
+                const resp = await fetch(TEST_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                log('Status: ' + resp.status + ' — Check Network tab Payload!', resp.ok ? 'success' : 'error');
+            } catch (e) {
+                log('Network error (expected if no server): ' + e.message, 'info');
+                log('→ Check Network tab for the intercepted request payload', 'success');
+            }
+        }
+
+        async function testFetchBlob() {
+            log('━━━ fetch() with Blob body ━━━', 'info');
+            const payload = { items: [1, 2, 3], count: 3, nested: { deep: 'value' } };
+            log('Original: ' + JSON.stringify(payload));
+            const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+            try {
+                const resp = await fetch(TEST_URL, {
+                    method: 'POST',
+                    body: blob
+                });
+                log('Status: ' + resp.status + ' — Check Network tab Payload!', resp.ok ? 'success' : 'error');
+            } catch (e) {
+                log('Network error (expected if no server): ' + e.message, 'info');
+                log('→ Check Network tab for the intercepted request payload', 'success');
+            }
+        }
+
+        async function testFetchRequest() {
+            log('━━━ fetch() with Request object ━━━', 'info');
+            const payload = { session: 'xyz123', page: '/home', nested: { level: 'deep' } };
+            log('Original: ' + JSON.stringify(payload));
+            const req = new Request(TEST_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            try {
+                const resp = await fetch(req);
+                log('Status: ' + resp.status + ' — Check Network tab Payload!', resp.ok ? 'success' : 'error');
+            } catch (e) {
+                log('Network error (expected if no server): ' + e.message, 'info');
+                log('→ Check Network tab for the intercepted request payload', 'success');
+            }
+        }
+
+        function testBeaconString() {
+            log('━━━ sendBeacon() with string body ━━━', 'info');
+            const payload = { event: 'click', ts: 1234567890, nested: { source: 'page' } };
+            log('Original: ' + JSON.stringify(payload));
+            const result = navigator.sendBeacon(TEST_URL, JSON.stringify(payload));
+            log('sendBeacon returned: ' + result, result ? 'success' : 'error');
+            log('→ Check Network tab for the intercepted request payload', 'success');
+        }
+
+        function testBeaconBlob() {
+            log('━━━ sendBeacon() with Blob body (THE BUG SCENARIO) ━━━', 'info');
+            const payload = { asp: { 'as-uid': 'abc123', 'as-av': '3.6.76', platform: 'web' }, user: 'anon' };
+            log('Original: ' + JSON.stringify(payload));
+            const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+            const result = navigator.sendBeacon(TEST_URL, blob);
+            log('sendBeacon returned: ' + result, result ? 'success' : 'error');
+            log('→ Check Network tab — payload should have ALL original keys + merged delta', 'success');
+            log('→ If only delta shows, the bug is NOT fixed', 'error');
+        }
+    </script>
+</body>
+
+</html>

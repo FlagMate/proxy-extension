@@ -1,0 +1,235 @@
+/* ==========================================================================
+   Super Debug — Lightweight Code Editor Styles
+   A minimal, professional code editor with syntax highlighting, line numbers,
+   and dark theme with green accent.
+   ========================================================================== */
+
+.sd-editor {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    position: relative;
+    font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', 'Cascadia Code', 'Consolas', 'Monaco', monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    background: #1a1a2e;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+/* Editor wrapper (gutter + code area) */
+.sd-editor-wrapper {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+}
+
+/* Line number gutter */
+.sd-editor-gutter {
+    flex-shrink: 0;
+    width: 48px;
+    padding: 10px 0;
+    background: #151525;
+    border-right: 1px solid #2a2a4a;
+    overflow: hidden;
+    user-select: none;
+    text-align: right;
+    color: #4a4a6a;
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+.sd-editor-gutter-inner {
+    padding-right: 12px;
+    padding-left: 8px;
+}
+
+.sd-line-number {
+    display: block;
+    height: calc(13px * 1.6);
+    line-height: calc(13px * 1.6);
+}
+
+.sd-line-number.active {
+    color: #00d4aa;
+}
+
+/* Code container (overlay approach) */
+.sd-editor-code {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Textarea (invisible text input layer) */
+.sd-editor-textarea {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    padding: 10px 12px;
+    margin: 0;
+    border: none;
+    outline: none;
+    resize: none;
+    font-family: inherit;
+    font-size: inherit;
+    line-height: inherit;
+    color: transparent;
+    caret-color: #00d4aa;
+    background: transparent;
+    white-space: pre;
+    overflow: auto;
+    tab-size: 2;
+    -moz-tab-size: 2;
+    z-index: 2;
+    /* Make text invisible but keep caret visible */
+    -webkit-text-fill-color: transparent;
+}
+
+.sd-editor-textarea::selection {
+    background: rgba(0, 212, 170, 0.2);
+    -webkit-text-fill-color: transparent;
+}
+
+.sd-editor-textarea::-moz-selection {
+    background: rgba(0, 212, 170, 0.2);
+}
+
+.sd-editor-textarea::placeholder {
+    -webkit-text-fill-color: #4a4a6a;
+    color: #4a4a6a;
+}
+
+/* Highlighted overlay (pre/code display layer) */
+.sd-editor-highlight {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    padding: 10px 12px;
+    margin: 0;
+    pointer-events: none;
+    white-space: pre;
+    overflow: auto;
+    z-index: 1;
+    color: #c8c8e8;
+    word-wrap: normal;
+}
+
+/* Bracket matching highlight */
+.sd-bracket-match {
+    background: rgba(0, 212, 170, 0.2);
+    border-bottom: 1px solid #00d4aa;
+    border-radius: 2px;
+}
+
+/* ==========================================================================
+   Syntax Highlighting Tokens
+   ========================================================================== */
+
+/* Keywords: function, const, let, var, return, if, else, etc. */
+.sd-tok-keyword {
+    color: #c792ea;
+    font-weight: 500;
+}
+
+/* Strings: 'hello', "world", `template` */
+.sd-tok-string {
+    color: #c3e88d;
+}
+
+/* Numbers: 42, 3.14, 0xff */
+.sd-tok-number {
+    color: #f78c6c;
+}
+
+/* Comments: // line, /* block */
+.sd-tok-comment {
+    color: #546e7a;
+    font-style: italic;
+}
+
+/* Operators: =, +, -, ===, =>, etc. */
+.sd-tok-operator {
+    color: #89ddff;
+}
+
+/* Functions / method names */
+.sd-tok-function {
+    color: #82aaff;
+}
+
+/* Punctuation: braces, parens, semicolons */
+.sd-tok-punctuation {
+    color: #89ddff;
+}
+
+/* CSS selectors / property names */
+.sd-tok-property {
+    color: #80cbc4;
+}
+
+/* CSS values */
+.sd-tok-value {
+    color: #f78c6c;
+}
+
+/* HTML/CSS tag names */
+.sd-tok-tag {
+    color: #f07178;
+}
+
+/* Regex */
+.sd-tok-regex {
+    color: #89ddff;
+}
+
+/* Boolean: true, false */
+.sd-tok-boolean {
+    color: #f78c6c;
+}
+
+/* Null/undefined */
+.sd-tok-null {
+    color: #f78c6c;
+    font-style: italic;
+}
+
+/* ==========================================================================
+   Scrollbar Styling
+   ========================================================================== */
+
+.sd-editor-textarea::-webkit-scrollbar,
+.sd-editor-highlight::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.sd-editor-textarea::-webkit-scrollbar-track,
+.sd-editor-highlight::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.sd-editor-textarea::-webkit-scrollbar-thumb,
+.sd-editor-highlight::-webkit-scrollbar-thumb {
+    background: #2a2a4a;
+    border-radius: 4px;
+}
+
+.sd-editor-textarea::-webkit-scrollbar-thumb:hover,
+.sd-editor-highlight::-webkit-scrollbar-thumb:hover {
+    background: #3a3a5a;
+}
+
+/* ==========================================================================
+   Focus State
+   ========================================================================== */
+
+.sd-editor.focused {
+    box-shadow: 0 0 0 1px #00d4aa40, 0 0 8px rgba(0, 212, 170, 0.1);
+}

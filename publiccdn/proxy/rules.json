@@ -1,0 +1,32 @@
+[
+  {
+    "name": "CDN Sample — Force VIDEOURL playback (merge JSON)",
+    "enabled": true,
+    "match": {
+      "urlPattern": "*apiv2.sonyliv.com/*/CONTENT/VIDEOURL/*",
+      "matchType": "wildcard",
+      "methods": ["GET", "POST"],
+      "resourceTypes": ["xmlhttprequest", "*"]
+    },
+    "response": {
+      "body": {
+        "enabled": true,
+        "mode": "merge-json",
+        "mergeValue": "{ \"resultObj\": { \"isEncrypted\": false, \"_sdmCdnRule\": \"CDN Sample — Force VIDEOURL playback\" } }",
+        "contentType": "application/json",
+        "statusCode": 200
+      }
+    }
+  },
+  {
+    "name": "CDN Sample — Block Godavari analytics beacon",
+    "enabled": true,
+    "block": true,
+    "match": {
+      "urlPattern": "*godavari.sonyliv.com/*",
+      "matchType": "wildcard",
+      "methods": ["*"],
+      "resourceTypes": ["*"]
+    }
+  }
+]
